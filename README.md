@@ -2,6 +2,14 @@
 
 SalahTrack is a simple prayer tracking app for recording daily salah, marking qaza, and reviewing monthly progress.
 
+## Live Demo
+
+[https://salahtrack-ten.vercel.app](https://salahtrack-ten.vercel.app)
+
+## Preview
+
+![SalahTrack Preview](https://salahtrack-ten.vercel.app/opengraph-image)
+
 ## Tech Stack
 
 - Next.js
@@ -18,6 +26,7 @@ SalahTrack is a simple prayer tracking app for recording daily salah, marking qa
 - Monthly progress bar
 - Dark / light mode toggle
 - Export, import, and reset local data
+- SEO-friendly sitemap, robots.txt, metadata, and app icons
 
 ## Getting Started
 
@@ -48,8 +57,13 @@ app/
   settings/
     page.js
   globals.css
+  icon.svg
   layout.js
+  manifest.js
+  opengraph-image.js
   page.js
+  robots.js
+  sitemap.js
 components/
   HeaderBar.js
   PrayerCalendar.js

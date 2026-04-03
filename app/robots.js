@@ -1,5 +1,5 @@
 export default function robots() {
-  const baseUrl = 'https://example.com';
+  const baseUrl = 'https://salahtrack-ten.vercel.app';
 
   return {
     rules: {
@@ -9,3 +9,4 @@ export default function robots() {
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
+

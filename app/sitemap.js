@@ -1,5 +1,5 @@
 export default function sitemap() {
-  const baseUrl = 'https://example.com';
+  const baseUrl = 'https://salahtrack-ten.vercel.app';
 
   return [
     {
@@ -22,3 +22,4 @@ export default function sitemap() {
     },
   ];
 }
+
