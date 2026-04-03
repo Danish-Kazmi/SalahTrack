@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import AppIcon from '@/components/AppIcon';
 import { PRAYERS, calculateStats, formatDateKey, parseDateKey, readPrayerData, writePrayerData } from '@/lib/prayers';
 
 function getSummary(dayRecord = {}) {
@@ -85,7 +86,7 @@ export default function PrayerCalendar() {
       <section className="rounded-3xl bg-white/90 p-6 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Monthly Calendar</p>
+            <p className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-emerald-600"><AppIcon name="calendar" className="h-4 w-4" />Monthly Calendar</p>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{monthLabel}</h1>
           </div>
           <div className="flex gap-2">
@@ -132,6 +133,7 @@ export default function PrayerCalendar() {
                 <div key={prayer.key} className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
                   <div className="flex items-center justify-between gap-4">
                     <label className="flex items-center gap-3 text-lg font-semibold">
+                      <AppIcon name={prayer.key} className="h-5 w-5 text-emerald-600" />
                       <input
                         type="checkbox"
                         checked={status === 'done'}
@@ -163,11 +165,11 @@ export default function PrayerCalendar() {
           <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Progress</p>
           <div className="mt-4 space-y-4">
             <div className="rounded-2xl bg-emerald-50 p-4 dark:bg-slate-800">
-              <p className="text-sm text-slate-500 dark:text-slate-300">Total prayers done</p>
+              <p className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300"><AppIcon name="check" className="h-4 w-4 text-emerald-600" />Total prayers done</p>
               <p className="text-3xl font-bold text-emerald-600">{stats.done}</p>
             </div>
             <div className="rounded-2xl bg-red-50 p-4 dark:bg-slate-800">
-              <p className="text-sm text-slate-500 dark:text-slate-300">Total qaza</p>
+              <p className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300"><AppIcon name="qaza" className="h-4 w-4 text-red-500" />Total qaza</p>
               <p className="text-3xl font-bold text-red-500">{stats.qaza}</p>
             </div>
             <div>
@@ -185,3 +187,7 @@ export default function PrayerCalendar() {
     </main>
   );
 }
+
+
+
+

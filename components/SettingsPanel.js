@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import AppIcon from '@/components/AppIcon';
 import { readPrayerData, writePrayerData } from '@/lib/prayers';
 
 export default function SettingsPanel() {
@@ -45,22 +46,28 @@ export default function SettingsPanel() {
 
   return (
     <section className="mt-6 rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
-      <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Settings</h1>
+      <h1 className="inline-flex items-center gap-3 text-3xl font-bold text-slate-900 dark:text-white">
+        <AppIcon name="settings" className="h-7 w-7 text-emerald-600" />
+        Settings
+      </h1>
       <p className="mt-3 text-slate-600 dark:text-slate-300">
         Frontend is ready for now. This page still uses local JSON storage until we connect Supabase.
       </p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        <button type="button" onClick={exportData} className="rounded-2xl bg-emerald-500 px-6 py-4 font-semibold text-white hover:bg-emerald-600">
+        <button type="button" onClick={exportData} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-4 font-semibold text-white hover:bg-emerald-600">
+          <AppIcon name="check" />
           Export Data
         </button>
-        <label className="cursor-pointer rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-center font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300">
+        <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-center font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300">
+          <AppIcon name="calendar" />
           Import Data
           <input type="file" accept="application/json" onChange={importData} className="hidden" />
         </label>
       </div>
 
-      <button type="button" onClick={resetData} className="mt-4 rounded-2xl bg-red-500 px-6 py-4 font-semibold text-white hover:bg-red-600">
+      <button type="button" onClick={resetData} className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-red-500 px-6 py-4 font-semibold text-white hover:bg-red-600">
+        <AppIcon name="qaza" />
         Reset All Data
       </button>
 

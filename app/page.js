@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AppIcon from '@/components/AppIcon';
 import ThemeToggle from '@/components/ThemeToggle';
 
 export default function HomePage() {
@@ -12,16 +13,19 @@ export default function HomePage() {
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Link href="/calendar" className="rounded-2xl bg-emerald-500 px-6 py-4 font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-600 dark:shadow-none">
+          <Link href="/calendar" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-4 font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-600 dark:shadow-none">
+            <AppIcon name="calendar" />
             Open Tracker
           </Link>
-          <Link href="/calendar" className="rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300">
+          <Link href="/calendar" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300">
+            <AppIcon name="check" />
             View Progress
           </Link>
         </div>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm">
-          <Link href="/settings" className="text-slate-500 underline underline-offset-4 hover:text-emerald-600 dark:text-slate-300">
+          <Link href="/settings" className="inline-flex items-center gap-2 text-slate-500 underline underline-offset-4 hover:text-emerald-600 dark:text-slate-300">
+            <AppIcon name="settings" className="h-4 w-4" />
             Settings
           </Link>
           <ThemeToggle />
@@ -30,4 +34,3 @@ export default function HomePage() {
     </main>
   );
 }
-
