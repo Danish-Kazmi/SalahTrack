@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import AppIcon from '@/components/AppIcon';
-import { getCurrentUser, loginWithEmail, logout } from '@/lib/auth';
+import { completeMagicLinkLogin, loginWithEmail, logout } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 
 export default function AuthPanel() {
   const [email, setEmail] = useState('');
@@ -13,23 +14,35 @@ export default function AuthPanel() {
   useEffect(() => {
     let isMounted = true;
 
-    getCurrentUser()
-      .then((user) => {
+    async function syncUser() {
+      try {
+        const user = await completeMagicLinkLogin();
+
         if (!isMounted) return;
 
         setCurrentUser(user);
-        if (user?.email) {
-          setMessage(`Signed in as ${user.email}`);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setCurrentUser(null);
-        }
-      });
+        setMessage(user?.email ? `Signed in as ${user.email}` : 'Enter your email to receive a magic login link.');
+      } catch (error) {
+        if (!isMounted) return;
+
+        setCurrentUser(null);
+        setMessage(error.message || 'Unable to complete login. Please request a new magic link.');
+      }
+    }
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+
+      const user = session?.user || null;
+      setCurrentUser(user);
+      setMessage(user?.email ? `Signed in as ${user.email}` : 'Enter your email to receive a magic login link.');
+    });
+
+    syncUser();
 
     return () => {
       isMounted = false;
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 
