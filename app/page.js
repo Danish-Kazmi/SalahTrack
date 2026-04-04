@@ -17,9 +17,9 @@ export default function HomePage() {
             <AppIcon name="calendar" />
             Open Tracker
           </Link>
-          <Link href="/calendar" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300">
+          <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300">
             <AppIcon name="check" />
-            View Progress
+            Email Login
           </Link>
         </div>
 
@@ -34,3 +34,4 @@ export default function HomePage() {
     </main>
   );
 }
+
