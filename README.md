@@ -2,6 +2,8 @@
 
 SalahTrack is a simple prayer tracking app for recording daily salah, marking qaza, and reviewing monthly progress.
 
+Currently, this is a frontend-only version with browser LocalStorage and no user login.
+
 ## Live Demo
 
 [https://salahtrack-ten.vercel.app](https://salahtrack-ten.vercel.app)
@@ -42,6 +44,12 @@ Run development server:
 npm run dev
 ```
 
+Create a production build:
+
+```bash
+npm run build
+```
+
 Open:
 
 ```bash
@@ -75,4 +83,4 @@ lib/
 
 ## Notes
 
-Currently, prayer data is stored in browser LocalStorage. Later, this can be replaced with Supabase Auth + Database so each user can have their own saved prayer history online.
+Prayer data is currently stored in browser LocalStorage. Later, this can be replaced with Supabase Auth + Database so each user can have their own saved prayer history online.
