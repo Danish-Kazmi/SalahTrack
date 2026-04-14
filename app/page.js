@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import AppIcon from '@/components/AppIcon';
+import AuthAwareSettingsLink from '@/components/AuthAwareSettingsLink';
 import ThemeToggle from '@/components/ThemeToggle';
 
 export default function HomePage() {
@@ -24,10 +25,7 @@ export default function HomePage() {
         </div>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm">
-          <Link href="/settings" className="inline-flex items-center gap-2 text-slate-500 underline underline-offset-4 hover:text-emerald-600 dark:text-slate-300">
-            <AppIcon name="settings" className="h-4 w-4" />
-            Settings
-          </Link>
+          <AuthAwareSettingsLink className="inline-flex items-center gap-2 text-slate-500 underline underline-offset-4 hover:text-emerald-600 dark:text-slate-300" />
           <ThemeToggle />
         </div>
       </section>

@@ -1,50 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AppIcon from '@/components/AppIcon';
-import { getCurrentUser } from '@/lib/auth';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 function getUserLabel(user) {
   return user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || '';
 }
 
 export default function HeaderUser() {
-  const [currentUser, setCurrentUser] = useState(null);
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) return undefined;
-
-    let isMounted = true;
-
-    async function syncUser() {
-      try {
-        const user = await getCurrentUser();
-
-        if (isMounted) {
-          setCurrentUser(user);
-        }
-      } catch {
-        if (isMounted) {
-          setCurrentUser(null);
-        }
-      }
-    }
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted) {
-        setCurrentUser(session?.user || null);
-      }
-    });
-
-    syncUser();
-
-    return () => {
-      isMounted = false;
-      authListener?.subscription?.unsubscribe();
-    };
-  }, []);
+  const { currentUser } = useCurrentUser();
 
   const userLabel = getUserLabel(currentUser);
 
