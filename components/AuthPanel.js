@@ -94,6 +94,18 @@ export default function AuthPanel() {
     }
   }
 
+  if (!isSupabaseConfigured) {
+    return (
+      <section className="rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
+        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-600">Supabase Setup</p>
+        <h1 className="mt-3 text-3xl font-bold text-slate-900 dark:text-white">Login is not configured yet</h1>
+        <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+          Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.local` to enable magic-link sign in.
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section className="rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
       <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-600">Email Login</p>
