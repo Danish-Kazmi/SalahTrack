@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import AppIcon from '@/components/AppIcon';
-import { PRAYERS, calculateStats, formatDateKey, parseDateKey, readPrayerData, writePrayerData } from '@/lib/prayers';
+import { getCurrentUser } from '@/lib/auth';
+import { fetchPrayerData, migrateLegacyPrayerDataToSupabase, savePrayerDay } from '@/lib/prayerRecords';
+import { PRAYERS, calculateStats, formatDateKey, parseDateKey } from '@/lib/prayers';
 
 function getSummary(dayRecord = {}) {
   const statuses = PRAYERS.map((prayer) => dayRecord[prayer.key] || 'missed');
@@ -16,11 +18,61 @@ function getSummary(dayRecord = {}) {
 
 export default function PrayerCalendar() {
   const [records, setRecords] = useState({});
+  const [currentUserId, setCurrentUserId] = useState('');
   const [visibleMonth, setVisibleMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => formatDateKey(new Date()));
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [syncMessage, setSyncMessage] = useState('Synced');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    setRecords(readPrayerData());
+    let isMounted = true;
+
+    async function loadRecords() {
+      try {
+        const user = await getCurrentUser();
+
+        if (!isMounted) return;
+
+        const userId = user?.id || '';
+        setCurrentUserId(userId);
+
+        if (!userId) {
+          setRecords({});
+          setIsLoading(false);
+          return;
+        }
+
+        const existingRecords = await fetchPrayerData(userId);
+
+        if (Object.keys(existingRecords).length > 0) {
+          setRecords(existingRecords);
+          setErrorMessage('');
+          return;
+        }
+
+        const migratedRecords = await migrateLegacyPrayerDataToSupabase(userId);
+        setRecords(migratedRecords);
+        setErrorMessage('');
+      } catch {
+        if (!isMounted) return;
+
+        setCurrentUserId('');
+        setRecords({});
+        setErrorMessage('Unable to load your prayer history right now.');
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadRecords();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const selectedRecord = records[selectedDate] || {};
@@ -33,7 +85,9 @@ export default function PrayerCalendar() {
     day: 'numeric',
   });
 
-  function updatePrayer(prayerKey, status) {
+  async function updatePrayer(prayerKey, status) {
+    if (isSaving) return;
+
     const nextRecords = { ...records, [selectedDate]: { ...(records[selectedDate] || {}) } };
 
     if (status === 'missed') {
@@ -46,8 +100,23 @@ export default function PrayerCalendar() {
       delete nextRecords[selectedDate];
     }
 
+    const nextSelectedRecord = nextRecords[selectedDate] || {};
+
     setRecords(nextRecords);
-    writePrayerData(nextRecords);
+    setIsSaving(true);
+    setSyncMessage('Saving...');
+
+    try {
+      await savePrayerDay(currentUserId, selectedDate, nextSelectedRecord);
+      setErrorMessage('');
+      setSyncMessage('Synced');
+    } catch {
+      setRecords(records);
+      setErrorMessage('We could not save that change. Please try again.');
+      setSyncMessage('Save failed');
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function shiftMonth(offset) {
@@ -81,6 +150,17 @@ export default function PrayerCalendar() {
     ];
   }, [records, selectedDate, visibleMonth]);
 
+  if (isLoading) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 pb-10">
+        <section className="rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-600">Preparing Data</p>
+          <h1 className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">Loading your prayer history...</h1>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 lg:grid-cols-[2fr_1fr]">
       <section className="rounded-3xl bg-white/90 p-6 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
@@ -89,7 +169,10 @@ export default function PrayerCalendar() {
             <p className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-emerald-600"><AppIcon name="calendar" className="h-4 w-4" />Monthly Calendar</p>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{monthLabel}</h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
+            <p className={`text-sm font-medium ${errorMessage ? 'text-red-600 dark:text-red-300' : syncMessage === 'Saving...' ? 'text-amber-600 dark:text-amber-300' : 'text-slate-500 dark:text-slate-300'}`}>
+              {errorMessage || syncMessage}
+            </p>
             <button type="button" onClick={() => shiftMonth(-1)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold dark:border-slate-700">
               Prev
             </button>
@@ -98,6 +181,12 @@ export default function PrayerCalendar() {
             </button>
           </div>
         </div>
+
+        {errorMessage ? (
+          <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+            {errorMessage}
+          </p>
+        ) : null}
 
         <div className="mt-6 grid grid-cols-7 gap-2 text-center text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => <span key={day}>{day}</span>)}
@@ -138,6 +227,7 @@ export default function PrayerCalendar() {
                         type="checkbox"
                         checked={status === 'done'}
                         onChange={(event) => updatePrayer(prayer.key, event.target.checked ? 'done' : 'missed')}
+                        disabled={isSaving}
                         className="h-5 w-5 accent-emerald-500"
                       />
                       {prayer.label}
@@ -147,6 +237,7 @@ export default function PrayerCalendar() {
                         type="checkbox"
                         checked={status === 'qaza'}
                         onChange={(event) => updatePrayer(prayer.key, event.target.checked ? 'qaza' : 'missed')}
+                        disabled={isSaving}
                         className="h-4 w-4 accent-amber-500"
                       />
                       Qaza

@@ -2,7 +2,7 @@
 
 SalahTrack is a simple prayer tracking app for recording daily salah, marking qaza, and reviewing monthly progress.
 
-Currently, this is a frontend-only version with browser LocalStorage and no user login.
+This app uses Supabase magic-link login, and prayer history is stored in Supabase per signed-in user.
 
 ## Live Demo
 
@@ -17,7 +17,8 @@ Currently, this is a frontend-only version with browser LocalStorage and no user
 - Next.js
 - React
 - Tailwind CSS
-- LocalStorage for temporary frontend-only data
+- Supabase Auth for email magic-link login
+- Supabase database for prayer history
 
 ## Features
 
@@ -28,6 +29,7 @@ Currently, this is a frontend-only version with browser LocalStorage and no user
 - Monthly progress bar
 - Dark / light mode toggle
 - Export, import, and reset local data
+- Protected calendar and settings pages
 - SEO-friendly sitemap, robots.txt, metadata, and app icons
 
 ## Getting Started
@@ -78,9 +80,19 @@ components/
   SettingsPanel.js
   ThemeToggle.js
 lib/
+  prayerRecords.js
   prayers.js
+supabase/
+  prayer_records.sql
 ```
+
+## Supabase Setup
+
+1. Create a Supabase project and enable Email OTP / magic links.
+2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.local`.
+3. Run the SQL in [supabase/prayer_records.sql](c:/laragon/www/tracker/supabase/prayer_records.sql) inside the Supabase SQL editor.
+4. Start the app and sign in. If a browser still has the old local-only data, the app will migrate it into Supabase the first time that user opens the tracker.
 
 ## Notes
 
-Prayer data is currently stored in browser LocalStorage. Later, this can be replaced with Supabase Auth + Database so each user can have their own saved prayer history online.
+Theme preference still uses browser LocalStorage. Prayer history, import/export, and reset now use Supabase.

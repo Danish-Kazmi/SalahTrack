@@ -1,17 +1,31 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AppIcon from '@/components/AppIcon';
 import { completeMagicLinkLogin, loginWithEmail, logout } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export default function AuthPanel() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('Enter your email to receive a magic login link.');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const nextPath = searchParams.get('next') || '/calendar';
+  const shouldAutoRedirect = searchParams.has('next') || searchParams.has('code');
+
+  function handleSignedInUser(user) {
+    setCurrentUser(user);
+    setMessage(user?.email ? `Signed in as ${user.email}` : 'Enter your email to receive a magic login link.');
+  }
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      return undefined;
+    }
+
     let isMounted = true;
 
     async function syncUser() {
@@ -20,8 +34,11 @@ export default function AuthPanel() {
 
         if (!isMounted) return;
 
-        setCurrentUser(user);
-        setMessage(user?.email ? `Signed in as ${user.email}` : 'Enter your email to receive a magic login link.');
+        handleSignedInUser(user);
+
+        if (user && shouldAutoRedirect) {
+          router.replace(nextPath);
+        }
       } catch (error) {
         if (!isMounted) return;
 
@@ -34,8 +51,7 @@ export default function AuthPanel() {
       if (!isMounted) return;
 
       const user = session?.user || null;
-      setCurrentUser(user);
-      setMessage(user?.email ? `Signed in as ${user.email}` : 'Enter your email to receive a magic login link.');
+      handleSignedInUser(user);
     });
 
     syncUser();
@@ -44,7 +60,7 @@ export default function AuthPanel() {
       isMounted = false;
       authListener?.subscription?.unsubscribe();
     };
-  }, []);
+  }, [nextPath, router, shouldAutoRedirect]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -52,7 +68,7 @@ export default function AuthPanel() {
     setMessage('Sending magic link...');
 
     try {
-      await loginWithEmail(email);
+      await loginWithEmail(email, nextPath);
       setMessage('Check your email for the login link.');
       setEmail('');
     } catch (error) {
@@ -70,6 +86,7 @@ export default function AuthPanel() {
       await logout();
       setCurrentUser(null);
       setMessage('Signed out. Enter your email to receive a new magic link.');
+      router.replace('/login');
     } catch (error) {
       setMessage(error.message || 'Something went wrong.');
     } finally {
@@ -87,6 +104,14 @@ export default function AuthPanel() {
         <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-900/20">
           <p className="text-sm text-slate-600 dark:text-slate-300">Current account</p>
           <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{currentUser.email}</p>
+          <button
+            type="button"
+            onClick={() => router.replace(nextPath)}
+            className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-3 font-semibold text-white transition hover:bg-emerald-600"
+          >
+            <AppIcon name="calendar" className="h-4 w-4" />
+            Continue to Tracker
+          </button>
           <button
             type="button"
             onClick={handleLogout}
