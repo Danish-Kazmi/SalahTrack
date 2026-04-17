@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import AppIcon from '@/components/AppIcon';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, logout } from '@/lib/auth';
 import { fetchPrayerData, migrateLegacyPrayerDataToSupabase, normalizePrayerData, replacePrayerData } from '@/lib/prayerRecords';
+import { formatDateKey } from '@/lib/prayers';
 
 export default function SettingsPanel() {
+  const router = useRouter();
   const [currentUserId, setCurrentUserId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -59,7 +62,7 @@ export default function SettingsPanel() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'prayer-tracker-export.json';
+      link.download = `prayer-tracker-${formatDateKey(new Date())}.json`;
       link.click();
       URL.revokeObjectURL(url);
       setMessage('Exported your current prayer data from Supabase.');
@@ -123,6 +126,19 @@ export default function SettingsPanel() {
     }
   }
 
+  async function handleSignOut() {
+    setIsWorking(true);
+    setMessage('Signing out...');
+
+    try {
+      await logout();
+      router.replace('/login');
+    } catch (error) {
+      setMessage(error.message || 'Unable to sign out.');
+      setIsWorking(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <section className="mt-6 rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
@@ -157,6 +173,19 @@ export default function SettingsPanel() {
         <AppIcon name="qaza" />
         Reset All Data
       </button>
+
+      <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
+        <p className="text-sm text-slate-500 dark:text-slate-300">Signed-in session</p>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          disabled={isWorking}
+          className="mt-3 inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-white dark:text-slate-900"
+        >
+          <AppIcon name="settings" className="h-4 w-4" />
+          Sign Out
+        </button>
+      </div>
 
       <p className="mt-6 min-h-[24px] text-sm font-medium text-slate-500 dark:text-slate-300">{message}</p>
     </section>

@@ -87,6 +87,7 @@ export default function PrayerCalendar() {
 
   async function updatePrayer(prayerKey, status) {
     if (isSaving) return;
+    if (selectedDate > formatDateKey(new Date())) return;
 
     const nextRecords = { ...records, [selectedDate]: { ...(records[selectedDate] || {}) } };
 
@@ -120,7 +121,18 @@ export default function PrayerCalendar() {
   }
 
   function shiftMonth(offset) {
-    setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + offset, 1));
+    const nextMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + offset, 1);
+    setVisibleMonth(nextMonth);
+
+    const today = new Date();
+    const isSameMonth = nextMonth.getFullYear() === today.getFullYear() && nextMonth.getMonth() === today.getMonth();
+    setSelectedDate(formatDateKey(isSameMonth ? today : nextMonth));
+  }
+
+  function goToToday() {
+    const today = new Date();
+    setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    setSelectedDate(formatDateKey(today));
   }
 
   const days = useMemo(() => {
@@ -135,7 +147,10 @@ export default function PrayerCalendar() {
       ...Array.from({ length: totalDays }, (_, index) => {
         const day = index + 1;
         const dateKey = formatDateKey(new Date(year, month, day));
-        const summary = getSummary(records[dateKey]);
+        const isFuture = dateKey > todayKey;
+        const summary = isFuture
+          ? { label: 'Upcoming', className: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-500' }
+          : getSummary(records[dateKey]);
 
         return {
           type: 'day',
@@ -145,10 +160,13 @@ export default function PrayerCalendar() {
           className: summary.className,
           isSelected: dateKey === selectedDate,
           isToday: dateKey === todayKey,
+          isFuture,
         };
       }),
     ];
   }, [records, selectedDate, visibleMonth]);
+
+  const isFutureSelected = selectedDate > formatDateKey(new Date());
 
   if (isLoading) {
     return (
@@ -176,6 +194,9 @@ export default function PrayerCalendar() {
             <button type="button" onClick={() => shiftMonth(-1)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold dark:border-slate-700">
               Prev
             </button>
+            <button type="button" onClick={goToToday} className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300">
+              Today
+            </button>
             <button type="button" onClick={() => shiftMonth(1)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold dark:border-slate-700">
               Next
             </button>
@@ -200,7 +221,7 @@ export default function PrayerCalendar() {
               key={item.dateKey}
               type="button"
               onClick={() => setSelectedDate(item.dateKey)}
-              className={`flex min-h-[72px] flex-col items-center justify-center rounded-2xl border p-2 transition ${item.className} ${item.isSelected ? 'ring-2 ring-emerald-500' : ''} ${item.isToday ? 'outline outline-2 outline-offset-2 outline-emerald-400' : ''}`}
+              className={`flex min-h-[72px] flex-col items-center justify-center rounded-2xl border p-2 transition ${item.className} ${item.isSelected ? 'ring-2 ring-emerald-500' : ''} ${item.isToday ? 'outline outline-2 outline-offset-2 outline-emerald-400' : ''} ${item.isFuture ? 'cursor-not-allowed opacity-60' : ''}`}
             >
               <span className="text-base font-bold">{item.day}</span>
               <span className="text-[10px] uppercase tracking-wide">{item.label}</span>
@@ -214,42 +235,48 @@ export default function PrayerCalendar() {
           <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Selected Day</p>
           <h2 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{selectedLabel}</h2>
 
-          <div className="mt-6 space-y-3">
-            {PRAYERS.map((prayer) => {
-              const status = selectedRecord[prayer.key] || 'missed';
+          {isFutureSelected ? (
+            <p className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              This day has not arrived yet. You can record prayers once the day starts.
+            </p>
+          ) : (
+            <div className="mt-6 space-y-3">
+              {PRAYERS.map((prayer) => {
+                const status = selectedRecord[prayer.key] || 'missed';
 
-              return (
-                <div key={prayer.key} className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-                  <div className="flex items-center justify-between gap-4">
-                    <label className="flex items-center gap-3 text-lg font-semibold">
-                      <AppIcon name={prayer.key} className="h-5 w-5 text-emerald-600" />
-                      <input
-                        type="checkbox"
-                        checked={status === 'done'}
-                        onChange={(event) => updatePrayer(prayer.key, event.target.checked ? 'done' : 'missed')}
-                        disabled={isSaving}
-                        className="h-5 w-5 accent-emerald-500"
-                      />
-                      {prayer.label}
-                    </label>
-                    <label className="flex items-center gap-2 text-sm font-medium text-amber-600 dark:text-amber-300">
-                      <input
-                        type="checkbox"
-                        checked={status === 'qaza'}
-                        onChange={(event) => updatePrayer(prayer.key, event.target.checked ? 'qaza' : 'missed')}
-                        disabled={isSaving}
-                        className="h-4 w-4 accent-amber-500"
-                      />
-                      Qaza
-                    </label>
+                return (
+                  <div key={prayer.key} className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+                    <div className="flex items-center justify-between gap-4">
+                      <label className="flex items-center gap-3 text-lg font-semibold">
+                        <AppIcon name={prayer.key} className="h-5 w-5 text-emerald-600" />
+                        <input
+                          type="checkbox"
+                          checked={status === 'done'}
+                          onChange={(event) => updatePrayer(prayer.key, event.target.checked ? 'done' : 'missed')}
+                          disabled={isSaving}
+                          className="h-5 w-5 accent-emerald-500"
+                        />
+                        {prayer.label}
+                      </label>
+                      <label className="flex items-center gap-2 text-sm font-medium text-amber-600 dark:text-amber-300">
+                        <input
+                          type="checkbox"
+                          checked={status === 'qaza'}
+                          onChange={(event) => updatePrayer(prayer.key, event.target.checked ? 'qaza' : 'missed')}
+                          disabled={isSaving}
+                          className="h-4 w-4 accent-amber-500"
+                        />
+                        Qaza
+                      </label>
+                    </div>
+                    <p className={`mt-2 text-sm ${status === 'done' ? 'text-emerald-600' : status === 'qaza' ? 'text-amber-600' : 'text-red-500'}`}>
+                      {status === 'done' ? 'Completed' : status === 'qaza' ? 'Marked as Qaza' : 'Missing'}
+                    </p>
                   </div>
-                  <p className={`mt-2 text-sm ${status === 'done' ? 'text-emerald-600' : status === 'qaza' ? 'text-amber-600' : 'text-red-500'}`}>
-                    {status === 'done' ? 'Completed' : status === 'qaza' ? 'Marked as Qaza' : 'Missing'}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         <section className="rounded-3xl bg-white/90 p-6 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">

@@ -32,9 +32,14 @@ export const metadata = {
   },
 };
 
+const themeInitScript = `(function(){try{var t=localStorage.getItem('prayer-tracker-theme');var p=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(!t&&p)){document.documentElement.classList.add('dark');}}catch(e){}})();`;
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="bg-emerald-50 text-slate-800 transition-colors dark:bg-slate-950 dark:text-slate-100">
         {children}
       </body>
