@@ -256,11 +256,11 @@ export default function PrayerCalendar() {
           <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Progress</p>
           <div className="mt-4 space-y-4">
             <div className="rounded-2xl bg-emerald-50 p-4 dark:bg-slate-800">
-              <p className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300"><AppIcon name="check" className="h-4 w-4 text-emerald-600" />Total prayers done</p>
+              <p className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300"><AppIcon name="check" className="h-4 w-4 text-emerald-600" />Prayers done this month</p>
               <p className="text-3xl font-bold text-emerald-600">{stats.done}</p>
             </div>
             <div className="rounded-2xl bg-red-50 p-4 dark:bg-slate-800">
-              <p className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300"><AppIcon name="qaza" className="h-4 w-4 text-red-500" />Total qaza</p>
+              <p className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300"><AppIcon name="qaza" className="h-4 w-4 text-red-500" />Qaza this month</p>
               <p className="text-3xl font-bold text-red-500">{stats.qaza}</p>
             </div>
             <div>

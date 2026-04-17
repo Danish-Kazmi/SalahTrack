@@ -83,9 +83,22 @@ export default function SettingsPanel() {
         throw new Error('Invalid JSON structure.');
       }
 
+      const rawDayCount = Object.keys(rawPayload).length;
       const payload = normalizePrayerData(rawPayload);
+      const keptDayCount = Object.keys(payload).length;
+
+      if (keptDayCount === 0) {
+        throw new Error('File contained no valid prayer data.');
+      }
+
       await replacePrayerData(currentUserId, payload);
-      setMessage('Imported data successfully to Supabase.');
+
+      const skipped = rawDayCount - keptDayCount;
+      setMessage(
+        skipped > 0
+          ? `Imported ${keptDayCount} days to Supabase (${skipped} skipped as invalid).`
+          : `Imported ${keptDayCount} days successfully to Supabase.`
+      );
     } catch (error) {
       setMessage(`Import failed: ${error.message}`);
     } finally {

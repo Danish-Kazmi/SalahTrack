@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { getCurrentUser, getLoginRedirectUrl } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 function buildNextPath(pathname, searchParams) {
   const query = searchParams?.toString();
   return query ? `${pathname}?${query}` : pathname;
+}
+
+function buildLoginPath(nextPath) {
+  return `/login?next=${encodeURIComponent(nextPath)}`;
 }
 
 export default function AuthGuard({ children }) {
@@ -32,7 +36,7 @@ export default function AuthGuard({ children }) {
         if (!isMounted) return;
 
         if (!user) {
-          window.location.assign(getLoginRedirectUrl(nextPath));
+          router.replace(buildLoginPath(nextPath));
           return;
         }
 
@@ -40,7 +44,7 @@ export default function AuthGuard({ children }) {
       } catch {
         if (!isMounted) return;
 
-        window.location.assign(getLoginRedirectUrl(nextPath));
+        router.replace(buildLoginPath(nextPath));
       }
     }
 
@@ -48,7 +52,7 @@ export default function AuthGuard({ children }) {
       if (!isMounted) return;
 
       if (!session?.user) {
-        window.location.assign(getLoginRedirectUrl(nextPath));
+        router.replace(buildLoginPath(nextPath));
         return;
       }
 
