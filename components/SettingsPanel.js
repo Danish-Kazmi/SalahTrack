@@ -1,47 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppIcon from '@/components/AppIcon';
-import { getCurrentUser, logout } from '@/lib/auth';
+import { logout } from '@/lib/auth';
 import { fetchPrayerData, normalizePrayerData, replacePrayerData } from '@/lib/prayerRecords';
 import { formatDateKey } from '@/lib/prayers';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 export default function SettingsPanel() {
   const router = useRouter();
-  const [currentUserId, setCurrentUserId] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const { currentUser, isLoading } = useCurrentUser();
+  const currentUserId = currentUser?.id || '';
   const [message, setMessage] = useState('');
   const [isWorking, setIsWorking] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadUser() {
-      try {
-        const user = await getCurrentUser();
-
-        if (!isMounted) return;
-
-        setCurrentUserId(user?.id || '');
-      } catch (error) {
-        if (!isMounted) return;
-
-        setCurrentUserId('');
-        setMessage(error.message || 'Unable to load your account settings.');
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    loadUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   async function exportData() {
     setIsWorking(true);

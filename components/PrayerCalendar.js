@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AppIcon from '@/components/AppIcon';
-import { getCurrentUser } from '@/lib/auth';
 import {
   fetchPrayerDataRange,
   hasAnyPrayerRecords,
@@ -17,6 +16,7 @@ import {
   getMonthRange,
   parseDateKey,
 } from '@/lib/prayers';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 function getSummary(dayRecord = {}) {
   const statuses = PRAYERS.map((prayer) => dayRecord[prayer.key] || 'missed');
@@ -29,8 +29,9 @@ function getSummary(dayRecord = {}) {
 }
 
 export default function PrayerCalendar() {
+  const { currentUser, isLoading: isAuthLoading } = useCurrentUser();
+  const currentUserId = currentUser?.id || '';
   const [records, setRecords] = useState({});
-  const [currentUserId, setCurrentUserId] = useState('');
   const [visibleMonth, setVisibleMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => formatDateKey(new Date()));
   const [isLoading, setIsLoading] = useState(true);
@@ -62,31 +63,26 @@ export default function PrayerCalendar() {
   }, []);
 
   useEffect(() => {
+    if (isAuthLoading) return undefined;
+
+    if (!currentUserId) {
+      setRecords({});
+      setIsLoading(false);
+      return undefined;
+    }
+
     let isMounted = true;
 
     async function loadInitial() {
       try {
-        const user = await getCurrentUser();
-
-        if (!isMounted) return;
-
-        const userId = user?.id || '';
-        setCurrentUserId(userId);
-
-        if (!userId) {
-          setRecords({});
-          setIsLoading(false);
-          return;
-        }
-
-        const hasRecords = await hasAnyPrayerRecords(userId);
+        const hasRecords = await hasAnyPrayerRecords(currentUserId);
 
         if (!isMounted) return;
 
         if (hasRecords) {
-          await loadMonth(userId, new Date());
+          await loadMonth(currentUserId, new Date());
         } else {
-          const migratedRecords = await migrateLegacyPrayerDataToSupabase(userId);
+          const migratedRecords = await migrateLegacyPrayerDataToSupabase(currentUserId);
           if (!isMounted) return;
           setRecords(migratedRecords);
           loadedMonthsRef.current.add(getMonthKey(new Date()));
@@ -99,7 +95,6 @@ export default function PrayerCalendar() {
       } catch {
         if (!isMounted) return;
 
-        setCurrentUserId('');
         setRecords({});
         setErrorMessage('Unable to load your prayer history right now.');
       } finally {
@@ -114,7 +109,7 @@ export default function PrayerCalendar() {
     return () => {
       isMounted = false;
     };
-  }, [loadMonth]);
+  }, [currentUserId, isAuthLoading, loadMonth]);
 
   useEffect(() => {
     if (!currentUserId) return;

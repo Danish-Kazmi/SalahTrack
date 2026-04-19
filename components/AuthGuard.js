@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { getCurrentUser } from '@/lib/auth';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 function buildNextPath(pathname, searchParams) {
   const query = searchParams?.toString();
@@ -18,55 +18,14 @@ export default function AuthGuard({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const nextPath = buildNextPath(pathname, searchParams);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { currentUser, isLoading } = useCurrentUser();
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setIsCheckingAuth(false);
-      return undefined;
+    if (!isSupabaseConfigured || isLoading) return;
+    if (!currentUser) {
+      router.replace(buildLoginPath(buildNextPath(pathname, searchParams)));
     }
-
-    let isMounted = true;
-
-    async function requireUser() {
-      try {
-        const user = await getCurrentUser();
-
-        if (!isMounted) return;
-
-        if (!user) {
-          router.replace(buildLoginPath(nextPath));
-          return;
-        }
-
-        setIsCheckingAuth(false);
-      } catch {
-        if (!isMounted) return;
-
-        router.replace(buildLoginPath(nextPath));
-      }
-    }
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) return;
-
-      if (!session?.user) {
-        router.replace(buildLoginPath(nextPath));
-        return;
-      }
-
-      setIsCheckingAuth(false);
-      router.refresh();
-    });
-
-    requireUser();
-
-    return () => {
-      isMounted = false;
-      authListener?.subscription?.unsubscribe();
-    };
-  }, [nextPath, router]);
+  }, [currentUser, isLoading, pathname, router, searchParams]);
 
   if (!isSupabaseConfigured) {
     return (
@@ -81,7 +40,7 @@ export default function AuthGuard({ children }) {
     );
   }
 
-  if (isCheckingAuth) {
+  if (isLoading || !currentUser) {
     return (
       <main className="mx-auto max-w-xl px-4 pb-10">
         <section className="rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">

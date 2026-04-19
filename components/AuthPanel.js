@@ -1,66 +1,48 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppIcon from '@/components/AppIcon';
 import { completeMagicLinkLogin, loginWithEmail, logout } from '@/lib/auth';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 export default function AuthPanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { currentUser } = useCurrentUser();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('Enter your email to receive a magic login link.');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const hasExchangedCodeRef = useRef(false);
   const nextPath = searchParams.get('next') || '/calendar';
-  const shouldAutoRedirect = searchParams.has('next') || searchParams.has('code');
-
-  function handleSignedInUser(user) {
-    setCurrentUser(user);
-    setMessage(user?.email ? `Signed in as ${user.email}` : 'Enter your email to receive a magic login link.');
-  }
+  const hasMagicCode = searchParams.has('code');
+  const shouldAutoRedirect = searchParams.has('next') || hasMagicCode;
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      return undefined;
-    }
+    if (!isSupabaseConfigured) return;
+    if (!hasMagicCode || hasExchangedCodeRef.current) return;
 
-    let isMounted = true;
+    hasExchangedCodeRef.current = true;
 
-    async function syncUser() {
-      try {
-        const user = await completeMagicLinkLogin();
-
-        if (!isMounted) return;
-
-        handleSignedInUser(user);
-
-        if (user && shouldAutoRedirect) {
-          router.replace(nextPath);
-        }
-      } catch (error) {
-        if (!isMounted) return;
-
-        setCurrentUser(null);
-        setMessage(error.message || 'Unable to complete login. Please request a new magic link.');
-      }
-    }
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) return;
-
-      const user = session?.user || null;
-      handleSignedInUser(user);
+    completeMagicLinkLogin().catch((error) => {
+      setMessage(error.message || 'Unable to complete login. Please request a new magic link.');
     });
+  }, [hasMagicCode]);
 
-    syncUser();
+  useEffect(() => {
+    if (currentUser?.email) {
+      setMessage(`Signed in as ${currentUser.email}`);
+    } else {
+      setMessage('Enter your email to receive a magic login link.');
+    }
+  }, [currentUser]);
 
-    return () => {
-      isMounted = false;
-      authListener?.subscription?.unsubscribe();
-    };
-  }, [nextPath, router, shouldAutoRedirect]);
+  useEffect(() => {
+    if (currentUser && shouldAutoRedirect) {
+      router.replace(nextPath);
+    }
+  }, [currentUser, shouldAutoRedirect, nextPath, router]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -84,7 +66,6 @@ export default function AuthPanel() {
 
     try {
       await logout();
-      setCurrentUser(null);
       setMessage('Signed out. Enter your email to receive a new magic link.');
       router.replace('/login');
     } catch (error) {

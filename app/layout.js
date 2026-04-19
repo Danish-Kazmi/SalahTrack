@@ -1,4 +1,5 @@
 import './globals.css';
+import { AuthProvider } from '@/lib/useCurrentUser';
 
 export const metadata = {
   metadataBase: new URL('https://salahtrack-ten.vercel.app'),
@@ -41,7 +42,7 @@ export default function RootLayout({ children }) {
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="bg-emerald-50 text-slate-800 transition-colors dark:bg-slate-950 dark:text-slate-100">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
