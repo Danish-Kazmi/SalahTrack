@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppIcon from '@/components/AppIcon';
 import { getCurrentUser, logout } from '@/lib/auth';
-import { fetchPrayerData, migrateLegacyPrayerDataToSupabase, normalizePrayerData, replacePrayerData } from '@/lib/prayerRecords';
+import { fetchPrayerData, normalizePrayerData, replacePrayerData } from '@/lib/prayerRecords';
 import { formatDateKey } from '@/lib/prayers';
 
 export default function SettingsPanel() {
@@ -23,16 +23,7 @@ export default function SettingsPanel() {
 
         if (!isMounted) return;
 
-        const userId = user?.id || '';
-        setCurrentUserId(userId);
-
-        if (userId) {
-          const existingRecords = await fetchPrayerData(userId);
-
-          if (Object.keys(existingRecords).length === 0) {
-            await migrateLegacyPrayerDataToSupabase(userId);
-          }
-        }
+        setCurrentUserId(user?.id || '');
       } catch (error) {
         if (!isMounted) return;
 

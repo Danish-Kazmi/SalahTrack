@@ -1,10 +1,22 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AppIcon from '@/components/AppIcon';
 import { getCurrentUser } from '@/lib/auth';
-import { fetchPrayerData, migrateLegacyPrayerDataToSupabase, savePrayerDay } from '@/lib/prayerRecords';
-import { PRAYERS, calculateStats, formatDateKey, parseDateKey } from '@/lib/prayers';
+import {
+  fetchPrayerDataRange,
+  hasAnyPrayerRecords,
+  migrateLegacyPrayerDataToSupabase,
+  savePrayerDay,
+} from '@/lib/prayerRecords';
+import {
+  PRAYERS,
+  calculateStats,
+  formatDateKey,
+  getMonthKey,
+  getMonthRange,
+  parseDateKey,
+} from '@/lib/prayers';
 
 function getSummary(dayRecord = {}) {
   const statuses = PRAYERS.map((prayer) => dayRecord[prayer.key] || 'missed');
@@ -25,11 +37,34 @@ export default function PrayerCalendar() {
   const [errorMessage, setErrorMessage] = useState('');
   const [syncMessage, setSyncMessage] = useState('Synced');
   const [isSaving, setIsSaving] = useState(false);
+  const loadedMonthsRef = useRef(new Set());
+  const inFlightMonthsRef = useRef(new Map());
+
+  const loadMonth = useCallback(async (userId, monthDate) => {
+    const monthKey = getMonthKey(monthDate);
+    if (loadedMonthsRef.current.has(monthKey)) return;
+
+    const existing = inFlightMonthsRef.current.get(monthKey);
+    if (existing) return existing;
+
+    const { startDateKey, endDateKey } = getMonthRange(monthDate);
+    const promise = fetchPrayerDataRange(userId, startDateKey, endDateKey)
+      .then((monthRecords) => {
+        setRecords((prev) => ({ ...prev, ...monthRecords }));
+        loadedMonthsRef.current.add(monthKey);
+      })
+      .finally(() => {
+        inFlightMonthsRef.current.delete(monthKey);
+      });
+
+    inFlightMonthsRef.current.set(monthKey, promise);
+    return promise;
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadRecords() {
+    async function loadInitial() {
       try {
         const user = await getCurrentUser();
 
@@ -44,17 +79,23 @@ export default function PrayerCalendar() {
           return;
         }
 
-        const existingRecords = await fetchPrayerData(userId);
+        const hasRecords = await hasAnyPrayerRecords(userId);
 
-        if (Object.keys(existingRecords).length > 0) {
-          setRecords(existingRecords);
-          setErrorMessage('');
-          return;
+        if (!isMounted) return;
+
+        if (hasRecords) {
+          await loadMonth(userId, new Date());
+        } else {
+          const migratedRecords = await migrateLegacyPrayerDataToSupabase(userId);
+          if (!isMounted) return;
+          setRecords(migratedRecords);
+          loadedMonthsRef.current.add(getMonthKey(new Date()));
+          Object.keys(migratedRecords).forEach((dateKey) => {
+            loadedMonthsRef.current.add(dateKey.slice(0, 7));
+          });
         }
 
-        const migratedRecords = await migrateLegacyPrayerDataToSupabase(userId);
-        setRecords(migratedRecords);
-        setErrorMessage('');
+        if (isMounted) setErrorMessage('');
       } catch {
         if (!isMounted) return;
 
@@ -68,12 +109,19 @@ export default function PrayerCalendar() {
       }
     }
 
-    loadRecords();
+    loadInitial();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [loadMonth]);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+    loadMonth(currentUserId, visibleMonth).catch(() => {
+      setErrorMessage('Unable to load data for this month.');
+    });
+  }, [currentUserId, visibleMonth, loadMonth]);
 
   const selectedRecord = records[selectedDate] || {};
   const stats = useMemo(() => calculateStats(records, visibleMonth), [records, visibleMonth]);
@@ -89,30 +137,37 @@ export default function PrayerCalendar() {
     if (isSaving) return;
     if (selectedDate > formatDateKey(new Date())) return;
 
-    const nextRecords = { ...records, [selectedDate]: { ...(records[selectedDate] || {}) } };
+    const previousDayRecord = records[selectedDate];
+    const nextDayRecord = { ...(previousDayRecord || {}) };
 
     if (status === 'missed') {
-      delete nextRecords[selectedDate][prayerKey];
+      delete nextDayRecord[prayerKey];
     } else {
-      nextRecords[selectedDate][prayerKey] = status;
+      nextDayRecord[prayerKey] = status;
     }
 
-    if (Object.keys(nextRecords[selectedDate]).length === 0) {
-      delete nextRecords[selectedDate];
-    }
+    const hasData = Object.keys(nextDayRecord).length > 0;
 
-    const nextSelectedRecord = nextRecords[selectedDate] || {};
-
-    setRecords(nextRecords);
+    setRecords((prev) => {
+      const next = { ...prev };
+      if (hasData) next[selectedDate] = nextDayRecord;
+      else delete next[selectedDate];
+      return next;
+    });
     setIsSaving(true);
     setSyncMessage('Saving...');
 
     try {
-      await savePrayerDay(currentUserId, selectedDate, nextSelectedRecord);
+      await savePrayerDay(currentUserId, selectedDate, hasData ? nextDayRecord : {});
       setErrorMessage('');
       setSyncMessage('Synced');
     } catch {
-      setRecords(records);
+      setRecords((prev) => {
+        const next = { ...prev };
+        if (previousDayRecord) next[selectedDate] = previousDayRecord;
+        else delete next[selectedDate];
+        return next;
+      });
       setErrorMessage('We could not save that change. Please try again.');
       setSyncMessage('Save failed');
     } finally {
