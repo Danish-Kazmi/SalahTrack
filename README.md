@@ -1,5 +1,6 @@
 # SalahTrack
 
+Developed By Danish Kazmi
 SalahTrack is a simple prayer tracking app for recording daily salah, marking qaza, and reviewing monthly progress.
 
 This app uses Supabase magic-link login, and prayer history is stored in Supabase per signed-in user.
