@@ -109,7 +109,7 @@ export default function AuthPanel() {
             type="button"
             onClick={handleLogout}
             disabled={isSubmitting}
-            className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-white dark:text-slate-900"
+            className="ml-3 mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-white dark:text-slate-900"
           >
             <AppIcon name="settings" className="h-4 w-4" />
             Sign Out
