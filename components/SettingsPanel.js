@@ -137,13 +137,18 @@ export default function SettingsPanel() {
         Reset All Data
       </button>
 
-      <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
-        <p className="text-sm text-slate-500 dark:text-slate-300">Signed-in session</p>
+      <div className="mt-8 flex flex-col gap-4 border-t border-slate-200 pt-6 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-slate-900 dark:text-white">Signed-in session</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
+            {currentUser?.email ? `You are signed in as ${currentUser.email}.` : 'Your prayer data is synced to this account.'}
+          </p>
+        </div>
         <button
           type="button"
           onClick={handleSignOut}
           disabled={isWorking}
-          className="mt-3 inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-white dark:text-slate-900"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-white dark:text-slate-900"
         >
           <AppIcon name="settings" className="h-4 w-4" />
           Sign Out
