@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import AppIcon from '@/components/AppIcon';
 import AuthAwareSettingsLink from '@/components/AuthAwareSettingsLink';
+import AuthAwareSignInLink from '@/components/AuthAwareSignInLink';
 import ThemeToggle from '@/components/ThemeToggle';
 
 export default function HomePage() {
@@ -13,15 +14,12 @@ export default function HomePage() {
           Record your five daily prayers, mark qaza, review past days, and monitor your monthly progress in one simple dashboard.
         </p>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Link href="/calendar" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-4 font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-600 dark:shadow-none">
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <Link href="/calendar" className="inline-flex flex-1 min-w-[200px] items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-4 font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-600 dark:shadow-none">
             <AppIcon name="calendar" />
             Open Tracker
           </Link>
-          <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300">
-            <AppIcon name="check" />
-            Sign In
-          </Link>
+          <AuthAwareSignInLink className="inline-flex flex-1 min-w-[200px] items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300" />
         </div>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm">
