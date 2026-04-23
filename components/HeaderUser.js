@@ -15,7 +15,7 @@ export default function HeaderUser() {
 
   return (
     <Link
-      href={userLabel ? '/calendar' : '/login'}
+      href={userLabel ? '/profile' : '/login'}
       title={userLabel ? `Signed in as ${userLabel}` : 'Login'}
       className="inline-flex min-w-0 max-w-44 items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-600 dark:text-slate-300"
     >

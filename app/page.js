@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import AppIcon from '@/components/AppIcon';
+import AuthAwareProfileLink from '@/components/AuthAwareProfileLink';
 import AuthAwareSettingsLink from '@/components/AuthAwareSettingsLink';
 import AuthAwareSignInLink from '@/components/AuthAwareSignInLink';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -23,6 +24,7 @@ export default function HomePage() {
         </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm sm:mt-10">
+          <AuthAwareProfileLink className="inline-flex items-center gap-2 text-slate-500 underline underline-offset-4 hover:text-emerald-600 dark:text-slate-300" />
           <AuthAwareSettingsLink className="inline-flex items-center gap-2 text-slate-500 underline underline-offset-4 hover:text-emerald-600 dark:text-slate-300" />
           <ThemeToggle />
         </div>
