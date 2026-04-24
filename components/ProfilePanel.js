@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import AppIcon from '@/components/AppIcon';
 import { fetchPrayerData, fetchPrayerDataRange } from '@/lib/prayerRecords';
 import { PRAYERS, formatDateKey, getMonthRange } from '@/lib/prayers';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -278,27 +277,11 @@ export default function ProfilePanel() {
         </div>
       </div>
 
-      <div className="rounded-3xl bg-white/90 p-6 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/calendar"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-600 dark:shadow-none sm:flex-1"
-          >
-            <AppIcon name="calendar" />
-            Open Calendar
-          </Link>
-          <Link
-            href="/settings"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-3 font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300 sm:flex-1"
-          >
-            <AppIcon name="settings" />
-            Account Settings
-          </Link>
+      {loadError ? (
+        <div className="rounded-3xl bg-white/90 p-6 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">{loadError}</p>
         </div>
-        {loadError ? (
-          <p className="mt-4 text-sm font-medium text-red-600 dark:text-red-400">{loadError}</p>
-        ) : null}
-      </div>
+      ) : null}
     </section>
   );
 }
