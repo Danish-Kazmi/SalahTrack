@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import AppIcon from '@/components/AppIcon';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 function getUserLabel(user) {

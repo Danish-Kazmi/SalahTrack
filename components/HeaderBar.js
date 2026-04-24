@@ -11,8 +11,8 @@ export default function HeaderBar() {
         SalahTrack
       </Link>
       <div className="flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto sm:gap-4">
-        <HeaderUser />
         <ThemeToggle />
+        <HeaderUser />
       </div>
     </header>
   );
