@@ -210,7 +210,10 @@ export default function ProfilePanel() {
 
   return (
     <section className="mt-6 space-y-6">
-      <div className="rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
+      <Link
+        href="/profile/edit"
+        className="block rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 transition hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-emerald-100/70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-100 dark:bg-slate-900 dark:shadow-none dark:hover:bg-slate-900/95 dark:focus-visible:ring-emerald-900/40"
+      >
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           {avatarUrl ? (
             <img
@@ -227,9 +230,10 @@ export default function ProfilePanel() {
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{displayName}</h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">{email}</p>
             <p className="mt-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">Member since {memberSince}</p>
+            <p className="mt-3 text-sm font-semibold text-slate-500 dark:text-slate-300">Tap to edit username and profile picture.</p>
           </div>
         </div>
-      </div>
+      </Link>
 
       <div className="rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Lifetime Stats</h2>
