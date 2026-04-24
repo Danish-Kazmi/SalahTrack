@@ -31,7 +31,6 @@ export default function HeaderUser() {
       title={userLabel ? `Signed in as ${userLabel}` : 'Login'}
       className="inline-flex min-w-0 max-w-52 items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-600 dark:text-slate-300"
     >
-      <AppIcon name="check" className="h-4 w-4 shrink-0" />
       {userLabel ? (
         avatarUrl ? (
           <img
