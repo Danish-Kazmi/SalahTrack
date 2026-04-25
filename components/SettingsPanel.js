@@ -101,7 +101,7 @@ export default function SettingsPanel() {
         Settings
       </h1>
       <p className="mt-3 text-slate-600 dark:text-slate-300">
-        Your prayer history now lives in Supabase and follows your signed-in account.
+        Your prayer history is now linked to your signed-in account and stays with you across devices.
       </p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
