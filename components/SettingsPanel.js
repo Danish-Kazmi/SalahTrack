@@ -121,15 +121,6 @@ export default function SettingsPanel() {
         Reset All Data
       </button>
 
-      <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
-        <div>
-          <p className="text-sm font-semibold text-slate-900 dark:text-white">Signed-in session</p>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
-            {currentUser?.email ? `You are signed in as ${currentUser.email}.` : 'Your prayer data is synced to this account.'}
-          </p>
-        </div>
-      </div>
-
       <p className="mt-6 min-h-[24px] text-sm font-medium text-slate-500 dark:text-slate-300">{message}</p>
     </section>
   );
