@@ -1,15 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import AppIcon from '@/components/AppIcon';
-import { logout } from '@/lib/auth';
 import { fetchPrayerData, normalizePrayerData, replacePrayerData } from '@/lib/prayerRecords';
 import { formatDateKey } from '@/lib/prayers';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 export default function SettingsPanel() {
-  const router = useRouter();
   const { currentUser, isLoading } = useCurrentUser();
   const currentUserId = currentUser?.id || '';
   const [message, setMessage] = useState('');
@@ -89,19 +86,6 @@ export default function SettingsPanel() {
     }
   }
 
-  async function handleSignOut() {
-    setIsWorking(true);
-    setMessage('Signing out...');
-
-    try {
-      await logout();
-      router.replace('/login');
-    } catch (error) {
-      setMessage(error.message || 'Unable to sign out.');
-      setIsWorking(false);
-    }
-  }
-
   if (isLoading) {
     return (
       <section className="mt-6 rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
@@ -137,22 +121,13 @@ export default function SettingsPanel() {
         Reset All Data
       </button>
 
-      <div className="mt-8 flex flex-col gap-4 border-t border-slate-200 pt-6 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
         <div>
           <p className="text-sm font-semibold text-slate-900 dark:text-white">Signed-in session</p>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
             {currentUser?.email ? `You are signed in as ${currentUser.email}.` : 'Your prayer data is synced to this account.'}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleSignOut}
-          disabled={isWorking}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-white dark:text-slate-900"
-        >
-          <AppIcon name="settings" className="h-4 w-4" />
-          Sign Out
-        </button>
       </div>
 
       <p className="mt-6 min-h-[24px] text-sm font-medium text-slate-500 dark:text-slate-300">{message}</p>
