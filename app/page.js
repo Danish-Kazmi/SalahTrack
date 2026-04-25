@@ -23,7 +23,7 @@ export default function HomePage() {
         </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm sm:mt-10">
-          <HeaderUser />
+          <HeaderUser directToProfile />
           <ThemeToggle />
         </div>
       </section>
