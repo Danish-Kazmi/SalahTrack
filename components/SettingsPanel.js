@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import AppIcon from '@/components/AppIcon';
+import { updateCurrentUserPassword } from '@/lib/auth';
 import { fetchPrayerData, normalizePrayerData, replacePrayerData } from '@/lib/prayerRecords';
 import { formatDateKey } from '@/lib/prayers';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -10,7 +11,11 @@ export default function SettingsPanel() {
   const { currentUser, isLoading } = useCurrentUser();
   const currentUserId = currentUser?.id || '';
   const [message, setMessage] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
   const [isWorking, setIsWorking] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   async function exportData() {
     setIsWorking(true);
@@ -86,6 +91,34 @@ export default function SettingsPanel() {
     }
   }
 
+  async function updatePassword(event) {
+    event.preventDefault();
+
+    if (newPassword.length < 6) {
+      setPasswordMessage('Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage('Password confirmation does not match.');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    setPasswordMessage('Updating your password...');
+
+    try {
+      await updateCurrentUserPassword(newPassword);
+      setPasswordMessage('Password updated successfully.');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      setPasswordMessage(error.message || 'Unable to update your password.');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <section className="mt-6 rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
@@ -122,6 +155,52 @@ export default function SettingsPanel() {
       </button>
 
       <p className="mt-6 min-h-[24px] text-sm font-medium text-slate-500 dark:text-slate-300">{message}</p>
+
+      <div className="mt-10 rounded-3xl border border-emerald-100 bg-emerald-50/70 p-6 dark:border-slate-700 dark:bg-slate-800/80">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Password</h2>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          Set a password for password login, or update your existing one for this account.
+        </p>
+
+        <form onSubmit={updatePassword} className="mt-5 space-y-4">
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+            New password
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              required
+              minLength={6}
+              placeholder="Enter a new password"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:ring-emerald-900/40"
+            />
+          </label>
+
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Confirm password
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              required
+              minLength={6}
+              placeholder="Confirm your new password"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:ring-emerald-900/40"
+            />
+          </label>
+
+          <button
+            type="submit"
+            disabled={isUpdatingPassword}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-4 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-white dark:text-slate-900"
+          >
+            <AppIcon name="settings" className="h-4 w-4" />
+            Save Password
+          </button>
+        </form>
+
+        <p className="mt-4 min-h-[24px] text-sm font-medium text-slate-500 dark:text-slate-300">{passwordMessage}</p>
+      </div>
     </section>
   );
 }

@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppIcon from '@/components/AppIcon';
-import { completeMagicLinkLogin, loginWithEmail, logout } from '@/lib/auth';
+import {
+  completeMagicLinkLogin,
+  loginWithEmail,
+  loginWithPassword,
+  logout,
+  registerWithPassword,
+} from '@/lib/auth';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
@@ -11,7 +17,10 @@ export default function AuthPanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentUser } = useCurrentUser();
+  const [mode, setMode] = useState('magic-link');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('Enter your email to receive a magic login link.');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const hasExchangedCodeRef = useRef(false);
@@ -33,10 +42,14 @@ export default function AuthPanel() {
   useEffect(() => {
     if (currentUser?.email) {
       setMessage(`Signed in as ${currentUser.email}`);
-    } else {
+    } else if (mode === 'magic-link') {
       setMessage('Enter your email to receive a magic login link.');
+    } else if (mode === 'sign-in') {
+      setMessage('Sign in with your email and password.');
+    } else {
+      setMessage('Create an account with your email and password.');
     }
-  }, [currentUser]);
+  }, [currentUser, mode]);
 
   useEffect(() => {
     if (currentUser && shouldAutoRedirect) {
@@ -46,13 +59,55 @@ export default function AuthPanel() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (mode === 'register') {
+      if (password.length < 6) {
+        setMessage('Password must be at least 6 characters long.');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setMessage('Password confirmation does not match.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
-    setMessage('Sending magic link...');
+    setMessage(
+      mode === 'magic-link'
+        ? 'Sending magic link...'
+        : mode === 'sign-in'
+          ? 'Signing you in...'
+          : 'Creating your account...'
+    );
 
     try {
-      await loginWithEmail(email, nextPath);
-      setMessage('Check your email for the login link.');
-      setEmail('');
+      if (mode === 'magic-link') {
+        await loginWithEmail(email, nextPath);
+        setMessage('Check your email for the login link.');
+        setEmail('');
+      } else if (mode === 'sign-in') {
+        await loginWithPassword(email, password);
+        setMessage('Signed in successfully.');
+        setPassword('');
+        setConfirmPassword('');
+        router.replace(nextPath);
+      } else {
+        const user = await registerWithPassword(email, password, nextPath);
+
+        if (user?.identities?.length === 0) {
+          setMessage('This email is already registered. Try signing in instead.');
+        } else if (user) {
+          setMessage('Account created successfully.');
+          setPassword('');
+          setConfirmPassword('');
+          router.replace(nextPath);
+        } else {
+          setMessage('Account created. If email confirmation is enabled, check your inbox before signing in.');
+          setPassword('');
+          setConfirmPassword('');
+        }
+      }
     } catch (error) {
       setMessage(error.message || 'Something went wrong.');
     } finally {
@@ -81,7 +136,7 @@ export default function AuthPanel() {
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-600">Supabase Setup</p>
         <h1 className="mt-3 text-3xl font-bold text-slate-900 dark:text-white">Login is not configured yet</h1>
         <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
-          Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.local` to enable magic-link sign in.
+          Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.local` to enable Supabase sign in.
         </p>
       </section>
     );
@@ -90,7 +145,7 @@ export default function AuthPanel() {
   return (
     <section className="rounded-3xl bg-white/90 p-8 shadow-xl shadow-emerald-100 dark:bg-slate-900 dark:shadow-none">
       <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-600">Email Login</p>
-      <h1 className="mt-3 text-3xl font-bold text-slate-900 dark:text-white">Continue with a magic link</h1>
+      <h1 className="mt-3 text-3xl font-bold text-slate-900 dark:text-white">Sign in to your tracker</h1>
       <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">{message}</p>
 
       {currentUser?.email ? (
@@ -117,6 +172,42 @@ export default function AuthPanel() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <button
+              type="button"
+              onClick={() => setMode('magic-link')}
+              className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                mode === 'magic-link'
+                  ? 'bg-emerald-500 text-white'
+                  : 'border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+              }`}
+            >
+              Magic Link
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('sign-in')}
+              className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                mode === 'sign-in'
+                  ? 'bg-emerald-500 text-white'
+                  : 'border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+              }`}
+            >
+              Password Login
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('register')}
+              className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                mode === 'register'
+                  ? 'bg-emerald-500 text-white'
+                  : 'border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+              }`}
+            >
+              Register
+            </button>
+          </div>
+
           <label className="block text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
             Email address
             <input
@@ -129,13 +220,47 @@ export default function AuthPanel() {
             />
           </label>
 
+          {mode !== 'magic-link' ? (
+            <label className="block text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Password
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter your password"
+                required
+                minLength={6}
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-emerald-900/40"
+              />
+            </label>
+          ) : null}
+
+          {mode === 'register' ? (
+            <label className="block text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Confirm password
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                placeholder="Confirm your password"
+                required
+                minLength={6}
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-emerald-900/40"
+              />
+            </label>
+          ) : null}
+
           <button
             type="submit"
             disabled={isSubmitting}
             className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-6 py-4 font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-70 dark:shadow-none"
           >
             <AppIcon name="check" />
-            Continue with Email
+            {mode === 'magic-link'
+              ? 'Send Magic Link'
+              : mode === 'sign-in'
+                ? 'Sign In with Password'
+                : 'Create Account'}
           </button>
         </form>
       )}
